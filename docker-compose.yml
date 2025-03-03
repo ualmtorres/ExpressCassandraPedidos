@@ -1,0 +1,55 @@
+version: "3.8"
+networks:
+  pedidos-net:
+    driver: bridge
+    name: pedidos-net
+    ipam:
+      driver: default
+      config:
+        - subnet: "10.0.0.0/24"
+services:
+  cassandra:
+    image: cassandra:4.1.8
+    container_name: cassandra
+    hostname: cassandra
+    ports:
+      - "9042:9042"
+    environment: &environment
+      CASSANDRA_USER: cassandra
+      CASSANDRA_PASSWORD: cassandra
+      # CASSANDRA_DC: DC1
+      # CASSANDRA_RACK: RAC1
+      # CASSANDRA_HOST: cassandra
+    volumes:
+      - ./data/cassandra:/var/lib/cassandra
+    networks:
+      pedidos-net:
+        ipv4_address: 10.0.0.98
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "cqlsh",
+          "-u cassandra",
+          "-p cassandra",
+          "-e describe keyspaces",
+        ]
+      interval: 15s
+      timeout: 10s
+      retries: 8
+  cassandra-web:
+    platform: linux/amd64
+    image: dcagatay/cassandra-web:latest
+    container_name: cassandra-web
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    ports:
+      - 4000:3000
+    networks:
+      pedidos-net:
+        ipv4_address: 10.0.0.99
+    environment:
+      CASSANDRA_HOST_IPS: 10.0.0.98
+      CASSANDRA_PORT: 9042
+    restart: unless-stopped
