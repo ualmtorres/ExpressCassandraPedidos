@@ -98,4 +98,9 @@ router.get('/', function(req, res, next) {
   `);
 });
 
+// Crear un enpoint para testear la conexión
+router.get('/health', (req, res) => {
+  res.status(200).send({ message: 'API is working' });
+});
+
 module.exports = router;

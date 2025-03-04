@@ -12,7 +12,7 @@ router.get('/', async (req, res) => {
 
     if (status) {
         try {
-            const result = await client.execute('SELECT * FROM orders_by_status WHERE status = ? ORDER BY order_date DESC', [status], { prepare: true });
+            const result = await client.execute('SELECT * FROM orders_by_status WHERE status = ?', [status], { prepare: true });
             res.status(200).send(result.rows);
         } catch (error) {
             res.status(500).send({ error: 'Failed to fetch orders by status' });
@@ -131,27 +131,112 @@ router.post('/', async (req, res) => {
 
 module.exports = router;
 
-// curl command to test the POST /orders endpoint
-// curl -X POST http://localhost:3000/orders \
-// -H "Content-Type: application/json" \
-// -d '{
-//     "order_id": "123e4567-e89b-12d3-a456-426614174000",
-//     "user_id": "550e8400-e29b-41d4-a716-446655440000",
-//     "order_date": "2023-10-10T10:00:00Z",
-//     "status": "pending",
-//     "total": 100.0,
-//     "items": [
-//         {
-//             "product_id": "product1",
-//             "quantity": 2,
-//             "price": 10.0
-//         },
-//         {
-//             "product_id": "product2",
-//             "quantity": 1,
-//             "price": 20.0
-//         }
-//     ]
-// }'
-
+// Example JSON bodies for POST /"orders
+// [
+//     {
+//         "order_id": "123e4567-e89b-12d3-a456-426614174001",
+//         "user_id": "550e8400-e29b-41d4-a716-446655440001",
+//         "order_date": "2023-10-11T10:00:00Z",
+//         "status": "pending",
+//         "total": 150.0,
+//         "items": [
+//             { "product_id": "product1", "quantity": 3, "price": 10.0 },
+//             { "product_id": "product3", "quantity": 2, "price": 30.0 }
+//         ]
+//     },
+//     {
+//         "order_id": "123e4567-e89b-12d3-a456-426614174002",
+//         "user_id": "550e8400-e29b-41d4-a716-446655440001",
+//         "order_date": "2023-10-12T11:00:00Z",
+//         "status": "shipped",
+//         "total": 200.0,
+//         "items": [
+//             { "product_id": "product2", "quantity": 4, "price": 20.0 },
+//             { "product_id": "product4", "quantity": 1, "price": 100.0 }
+//         ]
+//     },
+//     {
+//         "order_id": "123e4567-e89b-12d3-a456-426614174003",
+//         "user_id": "550e8400-e29b-41d4-a716-446655440002",
+//         "order_date": "2023-10-13T12:00:00Z",
+//         "status": "delivered",
+//         "total": 75.0,
+//         "items": [
+//             { "product_id": "product1", "quantity": 1, "price": 10.0 },
+//             { "product_id": "product5", "quantity": 5, "price": 13.0 }
+//         ]
+//     },
+//     {
+//         "order_id": "123e4567-e89b-12d3-a456-426614174004",
+//         "user_id": "550e8400-e29b-41d4-a716-446655440002",
+//         "order_date": "2023-10-14T13:00:00Z",
+//         "status": "pending",
+//         "total": 300.0,
+//         "items": [
+//             { "product_id": "product3", "quantity": 10, "price": 30.0 }
+//         ]
+//     },
+//     {
+//         "order_id": "123e4567-e89b-12d3-a456-426614174005",
+//         "user_id": "550e8400-e29b-41d4-a716-446655440002",
+//         "order_date": "2023-10-15T14:00:00Z",
+//         "status": "canceled",
+//         "total": 50.0,
+//         "items": [
+//             { "product_id": "product2", "quantity": 2, "price": 25.0 }
+//         ]
+//     },
+//     {
+//         "order_id": "123e4567-e89b-12d3-a456-426614174006",
+//         "user_id": "550e8400-e29b-41d4-a716-446655440003",
+//         "order_date": "2023-10-16T15:00:00Z",
+//         "status": "pending",
+//         "total": 120.0,
+//         "items": [
+//             { "product_id": "product4", "quantity": 1, "price": 100.0 },
+//             { "product_id": "product1", "quantity": 2, "price": 10.0 }
+//         ]
+//     },
+//     {
+//         "order_id": "123e4567-e89b-12d3-a456-426614174007",
+//         "user_id": "550e8400-e29b-41d4-a716-446655440003",
+//         "order_date": "2023-10-17T16:00:00Z",
+//         "status": "shipped",
+//         "total": 180.0,
+//         "items": [
+//             { "product_id": "product5", "quantity": 6, "price": 30.0 }
+//         ]
+//     },
+//     {
+//         "order_id": "123e4567-e89b-12d3-a456-426614174008",
+//         "user_id": "550e8400-e29b-41d4-a716-446655440003",
+//         "order_date": "2023-10-18T17:00:00Z",
+//         "status": "delivered",
+//         "total": 90.0,
+//         "items": [
+//             { "product_id": "product3", "quantity": 3, "price": 30.0 }
+//         ]
+//     },
+//     {
+//         "order_id": "123e4567-e89b-12d3-a456-426614174009",
+//         "user_id": "550e8400-e29b-41d4-a716-446655440003",
+//         "order_date": "2023-10-19T18:00:00Z",
+//         "status": "pending",
+//         "total": 60.0,
+//         "items": [
+//             { "product_id": "product2", "quantity": 3, "price": 20.0 }
+//         ]
+//     },
+//     {
+//         "order_id": "123e4567-e89b-12d3-a456-426614174010",
+//         "user_id": "550e8400-e29b-41d4-a716-446655440003",
+//         "order_date": "2023-10-20T19:00:00Z",
+//         "status": "canceled",
+//         "total": 110.0,
+//         "items": [
+//             { "product_id": "product1", "quantity": 5, "price": 10.0 },
+//             { "product_id": "product4", "quantity": 1, "price": 60.0 }
+//         ]
+//     }
+// ]
 
